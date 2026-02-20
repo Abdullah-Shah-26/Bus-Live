@@ -129,6 +129,7 @@ sequenceDiagram
 | Backend  | Firebase Auth + Realtime Database                     |
 | AI       | Google Gemini, Groq (Llama), Genkit                   |
 | Hardware | ESP32/ESP8266, NEO-6M GPS, TinyGPS++                  |
+| DevOps   | Docker, Docker Compose                                |
 
 ## Screenshots
 
@@ -156,6 +157,25 @@ npm run dev
 ```
 
 Visit `http://localhost:3000`
+
+### Running with Docker
+
+If you prefer using Docker, you can run the following command:
+
+```bash
+# Using Docker Compose
+docker-compose up --build
+```
+
+Or using plain Docker:
+
+```bash
+# Build the image
+docker build -t buslive .
+
+# Run the container
+docker run -p 3000:3000 --env-file .env buslive
+```
 
 ### Environment Variables
 

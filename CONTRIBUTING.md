@@ -39,6 +39,15 @@ cp .env.example .env
 npm run dev
 ```
 
+### Setup with Docker
+
+For a consistent development environment, you can use Docker:
+
+```bash
+# Build and start the container
+docker-compose up --build
+```
+
 ## Code Guidelines
 
 Just keep it simple:

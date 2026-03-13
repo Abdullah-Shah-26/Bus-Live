@@ -2,7 +2,7 @@
 
 Real-time bus tracking system with AI-powered traffic insights & live location updates.
 
-**[Live Demo](https://bus-live.vercel.app)**
+**[Live Preview](https://bus-live.vercel.app)**
 
 ## Problem Statement
 

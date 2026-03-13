@@ -31,10 +31,10 @@ import { Skeleton } from "./ui/skeleton";
 import dynamic from "next/dynamic";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { getRoute } from "@/ai/flows/routing-flow";
 import { ThemeToggle } from "./ThemeToggle";
 import type { LatLng, Map as LeafletMap } from "leaflet";
 import { Separator } from "./ui/separator";
+import { GetRouteOutputSchema } from "@/ai/schemas/routing-schema";
 
 interface Location {
   lat: number;
@@ -76,10 +76,10 @@ export default function TrackerPage({ busId }: { busId: string }) {
   const [remainingRoute, setRemainingRoute] = useState<LatLng[]>([]);
   const [map, setMap] = useState<LeafletMap | null>(null);
   const [journeyStage, setJourneyStage] = useState<"toUser" | "toCollege">(
-    "toUser"
+    "toUser",
   );
   const [arrivalStatus, setArrivalStatus] = useState<"user" | "college" | null>(
-    null
+    null,
   );
 
   const [alertState, setAlertState] = useState<AlertState>({
@@ -107,7 +107,7 @@ export default function TrackerPage({ busId }: { busId: string }) {
         ssr: false,
         loading: () => <Skeleton className="h-full w-full" />,
       }),
-    []
+    [],
   );
 
   useEffect(() => {
@@ -181,15 +181,32 @@ export default function TrackerPage({ busId }: { busId: string }) {
         }, 1000);
       }
     },
-    [journeyStage]
+    [journeyStage],
   );
 
   const fetchAndSetRoute = useCallback(
     async (start: Location, end: Location) => {
       try {
-        const routeData = await getRoute({ start, end });
+        const response = await fetch("/api/ai/route", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ start, end }),
+        });
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => null);
+          throw new Error(err?.error || "Could not calculate the bus route.");
+        }
+
+        const rawRouteData = await response.json();
+        const parsedRoute = GetRouteOutputSchema.safeParse(rawRouteData);
+        if (!parsedRoute.success) {
+          throw new Error("Route API returned an invalid response.");
+        }
+
+        const routeData = parsedRoute.data;
         const leafletRoute = routeData.coordinates.map(
-          (c) => ({ lat: c.lat, lng: c.lng } as LatLng)
+          (c) => ({ lat: c.lat, lng: c.lng }) as LatLng,
         );
         setRoute(leafletRoute);
         if (leafletRoute.length > 0) {
@@ -205,7 +222,7 @@ export default function TrackerPage({ busId }: { busId: string }) {
         });
       }
     },
-    [startSimulation, toast]
+    [startSimulation, toast],
   );
 
   useEffect(() => {
@@ -222,14 +239,14 @@ export default function TrackerPage({ busId }: { busId: string }) {
             userLat,
             userLng,
             COLLEGE_LOCATION.lat,
-            COLLEGE_LOCATION.lng
+            COLLEGE_LOCATION.lng,
           );
 
           console.log(" Distance to College (km):", distToCollege);
 
           if (distToCollege > 50) {
             console.warn(
-              "User is too far from college. Switching to demo location."
+              "User is too far from college. Switching to demo location.",
             );
             toast({
               title: "Outside Service Area",
@@ -253,11 +270,11 @@ export default function TrackerPage({ busId }: { busId: string }) {
             description: "Could not fetch your location. Using demo location.",
           });
           setUserLocation(MOCK_USER_LOCATION);
-        }
+        },
       );
     } else {
       console.warn(
-        "Geolocation is not supported by this browser. Using mock user location."
+        "Geolocation is not supported by this browser. Using mock user location.",
       );
       setUserLocation(MOCK_USER_LOCATION);
     }
@@ -312,13 +329,11 @@ export default function TrackerPage({ busId }: { busId: string }) {
               v.name.includes("Alex") ||
               (v.name.toLowerCase().includes("male") &&
                 v.lang.startsWith("en"))) &&
-            !v.name.toLowerCase().includes("female")
+            !v.name.toLowerCase().includes("female"),
         );
 
         if (!maleVoice) {
-          console.warn(
-            "No male voice available - notification audio skipped"
-          );
+          console.warn("No male voice available - notification audio skipped");
           return;
         }
 
@@ -354,7 +369,7 @@ export default function TrackerPage({ busId }: { busId: string }) {
       }, 3000);
     } else if (arrivalStatus === "college") {
       playNotificationSound(
-        `Bus ${busId} has arrived at the college. Journey complete!`
+        `Bus ${busId} has arrived at the college. Journey complete!`,
       );
 
       toast({
@@ -385,14 +400,14 @@ export default function TrackerPage({ busId }: { busId: string }) {
       if (routeIndexRef.current < route.length - 1) {
         const currentPos = window.L.latLng(
           busData.location.lat,
-          busData.location.lng
+          busData.location.lng,
         );
         const nextPoint = window.L.latLng(route[routeIndexRef.current + 1]);
         remainingDistance += currentPos.distanceTo(nextPoint);
 
         for (let i = routeIndexRef.current + 1; i < route.length - 1; i++) {
           remainingDistance += window.L.latLng(route[i]).distanceTo(
-            window.L.latLng(route[i + 1])
+            window.L.latLng(route[i + 1]),
           );
         }
       }
@@ -401,7 +416,7 @@ export default function TrackerPage({ busId }: { busId: string }) {
       const calculatedEta = calculateETA(
         remainingDistance,
         40,
-        trafficData?.level
+        trafficData?.level,
       );
       setEta(calculatedEta);
 
@@ -419,14 +434,14 @@ export default function TrackerPage({ busId }: { busId: string }) {
         if (journeyStage === "toUser") {
           playNotificationSound(
             `Bus ${busId} is reaching your pickup location in about ${Math.round(
-              calculatedEta
-            )} minutes. Please get ready.`
+              calculatedEta,
+            )} minutes. Please get ready.`,
           );
         } else {
           playNotificationSound(
             `Bus ${busId} will reach the college in about ${Math.round(
-              calculatedEta
-            )} minutes.`
+              calculatedEta,
+            )} minutes.`,
           );
         }
 
@@ -438,10 +453,10 @@ export default function TrackerPage({ busId }: { busId: string }) {
           description:
             journeyStage === "toUser"
               ? `Bus ${busId} will arrive at your pickup location in about ${Math.round(
-                  calculatedEta
+                  calculatedEta,
                 )} minutes. Get ready!`
               : `Bus ${busId} will arrive at the college in about ${Math.round(
-                  calculatedEta
+                  calculatedEta,
                 )} minutes.`,
         });
       }
@@ -463,7 +478,7 @@ export default function TrackerPage({ busId }: { busId: string }) {
       if (
         hasExitedCollegeBoundary(
           busData.location,
-          previousBusLocationRef.current
+          previousBusLocationRef.current,
         ) &&
         !alertState.collegeExitWarning
       ) {
@@ -613,16 +628,22 @@ export default function TrackerPage({ busId }: { busId: string }) {
               setIsAnalyzing(true);
 
               try {
-                const { analyzeTraffic } = await import(
-                  "@/ai/flows/traffic-flow"
-                );
-                console.log("Traffic flow imported successfully");
-
-                const result = await analyzeTraffic({
-                  location: `${busData.location.lat}, ${busData.location.lng}`,
-                  time: new Date().toLocaleTimeString(),
-                  currentSpeed: busData.speed,
+                const response = await fetch("/api/ai/traffic", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    location: `${busData.location.lat}, ${busData.location.lng}`,
+                    time: new Date().toLocaleTimeString(),
+                    currentSpeed: busData.speed,
+                  }),
                 });
+
+                if (!response.ok) {
+                  const err = await response.json().catch(() => null);
+                  throw new Error(err?.error || "Could not fetch AI insights.");
+                }
+
+                const result = await response.json();
 
                 console.log("AI Analysis Result:", result);
 
@@ -640,7 +661,7 @@ export default function TrackerPage({ busId }: { busId: string }) {
 
                 if (e.message?.includes("API key")) {
                   errorMessage =
-                    "Gemini API key is missing. Please configure GEMINI_API_KEY in your .env file.";
+                    "AI API key is missing. Please configure GOOGLE_GENAI_API_KEY in your .env file.";
                 } else if (
                   e.message?.includes("429") ||
                   e.message?.includes("quota") ||
@@ -708,8 +729,8 @@ export default function TrackerPage({ busId }: { busId: string }) {
                   {busData?.status === "finished"
                     ? "Arrived at college"
                     : journeyStage === "toUser"
-                    ? "Coming to you"
-                    : "Heading to college"}
+                      ? "Coming to you"
+                      : "Heading to college"}
                 </p>
               </div>
             </CardTitle>

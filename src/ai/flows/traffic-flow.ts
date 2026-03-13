@@ -8,7 +8,7 @@ import {
 } from "../schemas/traffic-schema";
 
 export async function analyzeTraffic(
-  input: z.infer<typeof TrafficAnalysisInputSchema>
+  input: z.infer<typeof TrafficAnalysisInputSchema>,
 ) {
   try {
     return await analyzeTrafficFlow(input);
@@ -26,13 +26,13 @@ export async function analyzeTraffic(
 }
 
 async function analyzeTrafficWithGroq(
-  input: z.infer<typeof TrafficAnalysisInputSchema>
+  input: z.infer<typeof TrafficAnalysisInputSchema>,
 ) {
   const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
   if (!GROQ_API_KEY || GROQ_API_KEY === "your_groq_api_key_here") {
     throw new Error(
-      "Groq API key not configured. Please add GROQ_API_KEY to your .env file."
+      "Groq API key not configured. Please add GROQ_API_KEY to your .env file.",
     );
   }
 
@@ -72,7 +72,7 @@ Speed > 40km/h = light traffic`;
         response_format: { type: "json_object" },
         temperature: 0.7,
       }),
-    }
+    },
   );
 
   if (!response.ok) {
@@ -119,11 +119,6 @@ const analyzeTrafficFlow = ai.defineFlow(
       If the speed is high (> 40km/h), assume low traffic.
     `;
 
-    const { text } = await ai.generate({
-      prompt: prompt,
-      output: { format: "json", schema: TrafficAnalysisOutputSchema },
-    });
-
     const result = await ai.generate({
       prompt,
       output: { format: "json", schema: TrafficAnalysisOutputSchema },
@@ -134,5 +129,5 @@ const analyzeTrafficFlow = ai.defineFlow(
     }
 
     throw new Error("Failed to generate traffic analysis");
-  }
+  },
 );

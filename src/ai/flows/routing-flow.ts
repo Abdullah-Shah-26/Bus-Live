@@ -6,17 +6,16 @@ import {
   GetRouteInputSchema,
   GetRouteOutputSchema,
 } from "../schemas/routing-schema";
-import fetch from "node-fetch";
 
 const routeCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000;
 
 function getCacheKey(
   start: { lat: number; lng: number },
-  end: { lat: number; lng: number }
+  end: { lat: number; lng: number },
 ): string {
   return `${start.lat.toFixed(4)},${start.lng.toFixed(4)}-${end.lat.toFixed(
-    4
+    4,
   )},${end.lng.toFixed(4)}`;
 }
 
@@ -59,7 +58,7 @@ const getRouteFlow = ai.defineFlow(
 
     if (!apiKey) {
       console.warn(
-        "OpenRouteService API key is not configured. Using fallback."
+        "OpenRouteService API key is not configured. Using fallback.",
       );
       return getFallbackRoute();
     }
@@ -102,7 +101,7 @@ const getRouteFlow = ai.defineFlow(
       if (data && data.features && data.features.length > 0) {
         const route = data.features[0];
         const coordinates = route.geometry.coordinates.map(
-          (coord: [number, number]) => ({ lat: coord[1], lng: coord[0] })
+          (coord: [number, number]) => ({ lat: coord[1], lng: coord[0] }),
         );
         const result = { coordinates };
 
@@ -117,5 +116,5 @@ const getRouteFlow = ai.defineFlow(
       console.error("Failed to fetch route from OpenRouteService", e);
       return getFallbackRoute();
     }
-  }
+  },
 );

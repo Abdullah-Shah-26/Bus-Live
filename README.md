@@ -214,10 +214,6 @@ src/
     └── schemas/              # Zod schemas
 ```
 
-## Inspiration
-
-Inspired by Smart India Hackathon 2025 PS #25013 (Government of Punjab) - Real-Time Public Transport Tracking for Small Cities. Implements low-cost GPS tracking with IoT hardware & mobile-first design for scalable bus tracking solutions.
-
 ## Contributing
 
 We welcome contributions! Check out our [Contributing Guide](CONTRIBUTING.md) to get started.
